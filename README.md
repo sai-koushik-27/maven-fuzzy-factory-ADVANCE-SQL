@@ -1,73 +1,114 @@
-# maven-fuzzy-factory.
+# E-Commerce Data Analysis for Maven Fuzzy Factory
 
-The course has the user play the role of a database analyst in a startup ecommerce company named Maven Fuzzy Factory. Responsibilities include optimizing market channels, measuring the impact of new product launches, and generally helping steer the startup to grow as quickly as possible.
+## Project Overview
+Maven Fuzzy Factory is an e-commerce startup specializing in stuffed animals. This project analyzes user behavior, traffic sources, and product performance using SQL. The goal is to provide actionable insights for business strategy and optimization.
 
-The dataset is provided by Maven Analytics. It covers the products and performance of an ecommerce startup.
+## Tool Used
+- **SQL Workbench**: Used to execute SQL queries and perform data analysis.
 
-# Updates:
-Overhauled the dashboard completely, got rid of old visuals that were bad, modernized others like the new card visual and DAX visual calculations, as well as a new color palette.
-# Goal
-The goal of this project is to put together a data storytelling report for the board of the company, highlighting the strides that have been made in the 8 months the company has been launched, and emphasizing its rapid growth. As well as showcase the steps taken to improve the website in general. Note that we are only going to analyze the data up until 2012-11-27 as that's the day we receive the email.
+## Dataset Overview
+The project utilizes a custom-built database with data on:
+- Website Activity
+- Products
+- Orders
 
-I decided to go the extra mile and visualize it as well!
 
-# Resources and Tools Used
-MySQL Workbench for the querying of the data.
-Dataset provided in the course in the form of SQL scripts.
-PowerPoint to write the report.
-# Importing the Dataset
-The preparation file includes a script to change certain settings in MySQL Workbench to not break some date values, and to make the timeouts for the queries less strict just in case my PC decides to be extra slow (it did).
-The other SQL script includes the data itself, as seen in my previous projects, this method allows the data to be imported very quickly.
-# Preliminary Check
-The Database has 6 tables, providing information about the user's website sessions, which pages were visited, their orders, the company's products, what items were orders, and what items were refunded.
-There are three sources from where the customer can find the website: "gsearch", "bsearch", and "socialbook"
-There are two marketing campaigns: "brand" and "nonbrand"
-# Mid-course Project
-## We are to extract certain information in order to tell a story to the board of the Maven Fuzzy Factory, an E-Commerce company that has been live for 8 months. The information required is as follows:
-Monthly trends of the web sessions and orders coming from the "gsearch" channel. (where the potential customer comes from)
-Ditto but separated by campaign.
-Ditto but only the "nonbrand" campaign, separated by device type.
-Ditto but "gsearch" against each of the other channels.
-Session to order conversion rates by month.
-Estimate revenue earned by landing page test conducted in the period between Jun 19th and Jul 28th.
-Create a full conversion funnel for both landing pages in the aforementioned period.
-Analyze the revenue generated in the test conducted between Sep 10th and Nov 10th between the two billing pages.
-# Monthly Trends of orders and sessions coming from Gsearch:
-We extract the month from the "created_at" column, and count the session and order IDs, aggregated by month. I'd include a year column as well, but it's redundant here.
+## Features of Each Table
 
-# Monthly Trends of orders and sessions coming from Gsearch seperated by campaign:
-Same query as before, except we use Case Pivoting to turn branded vs nonbranded into columns rather than keep them as rows, it's a neat trick! Basically it counts the result of the CASE statement if it satisfies the requirement (the campaign is branded or nonbranded), otherwise it treats it as null.
+### 1. **order_item_refunds**: Tracks refund information for items in orders.
 
-# Monthly Trends of nonbranded orders and sessions coming from Gsearch seperated by device type:
-Same query as the last one, but we'll use Case Pivoting with the device type, only paying mind to the searches coming thanks to the nonbranded campaign.
+| Column Name         | Description                                      |
+|---------------------|--------------------------------------------------|
+| order_item_refund_id | Unique identifier for each refund record         |
+| created_at          | Date when the refund was processed                |
+| order_item_id       | Identifier linking to the specific item refunded  |
+| order_id            | Identifier linking to the order with the refunded item |
+| refund_amount_usd   | Amount refunded in USD                            |
 
-# Comparing Gsearch against each of the other channels:
-We use the Case Pivoting again, we put the paid traffic coming from Gsearch and Bsearch in seperate categories, as well as the traffic coming in from search engines (non paid), and the traffic coming directly into the site.
+---
 
-# Session to order conversion rates by month.
-The conversion rate is the rate at which the website session is successful (order), so to acquire the rate, we aggregate the numbers of sessions, orders, and the rate of orders/sessions, by month.
+### 2. **order_items**: Contains details of items purchased in each order.
 
-# Estimate revenue earned by landing page test conducted in the period between Jun 19th and Jul 28th
-Using a subquery where we determine the first pageview id of every session, we are able to see which page the potential customer has landed on, in the next step.
+| Column Name         | Description                                      |
+|---------------------|--------------------------------------------------|
+| order_item_id       | Unique identifier for each item in an order       |
+| created_at          | Date when the item was added to the order         |
+| order_id            | Identifier linking to the parent order            |
+| product_id          | Identifier linking to the product purchased       |
+| is_primary_item     | Indicates if the item is the primary product (1 for primary, 0 for cross-sell) |
+| price_usd           | Selling price of the item in USD                  |
+| cogs_usd            | Cost of goods sold (COGS) for the item in USD     |
 
-Using two LEFT JOINs, we determine which landing page the customer has landed by joining the "website_pageviews" table, the count of sessions, orders, and the conversion rate per each landing page.
+---
 
-Next, we are to calculate the ID of the last session the original homepage was visited with nonbrand gsearch traffic. To do this we'll need to LEFT JOIN the website_pageviews table with the website_sessions ID. We didn't have to do this when we extracted the first pageview ID where the new lander page was visited because there were no constraints on the traffic type.
+### 3. **orders**: Stores information about customer orders.
 
-The increase of sessions since then (until the 27th of November as stated in the first section), and after some quick math we find that we now get 50 more sessions per months!
+| Column Name         | Description                                      |
+|---------------------|--------------------------------------------------|
+| order_id            | Unique identifier for each order                 |
+| created_at          | Date and time when the order was placed           |
+| website_session_id  | Identifier linking to the website session during the order |
+| user_id             | Identifier for the user who placed the order      |
+| primary_product_id  | ID of the main product purchased in the order     |
+| items_purchased     | Total number of items purchased in the order      |
+| price_usd           | Total amount paid for the order in USD            |
+| cogs_usd            | Total cost of goods sold (COGS) for the order in USD |
 
-The difference in CVR was 8.8%, so multiplying it by 22972 gives us about 202 since Jul 28th, so about 4 months
-202 / 4  is roughly 50, so we have 50 more sessions per month after switching to the new landing page!
+---
 
-# Create a full conversion funnel for both landing pages in the aforementioned period.
+### 4. **products**: Contains details about the products available.
 
-The conversion funnel is how far into the ordering process the session has gotten, from the browsing all the way to the thank-you page. To accomplish this task, we must divide the query into a few steps:
+| Column Name         | Description                                      |
+|---------------------|--------------------------------------------------|
+| product_id          | Unique identifier for each product                |
+| created_at          | Date when the product was added to the catalog    |
+| product_name        | Name of the product                               |
 
-First, we extract the sessions in this period that landed in these two pages.
-We add flags using Case Pivoting for each session, to show how far into the funnel it has gotten.
-Based on the previous step, we categorize each session on what step in the funnel it reached.
-We then count how many sessions reached each step of the funnel, as well as the full conversion rate, aggregated by the landing pages.
+---
 
-# Analyze the revenue generated in the test conducted between Sep 10th and Nov 10th between the two billing pages.
-We start by creating a subquery that has the needed data ready for us, the session ID, which billing page was used, the order ID and the total of the order, all in the time constraint specified by the CEO.
-Then, we group the sessions and their totals by each billing page. We find that the new billing page has a lift of $8.5 per session. I actually rewrote this entire query and realized the old one was correct all along
+### 5. **website_sessions**: Tracks website traffic and user sessions.
+
+| Column Name         | Description                                      |
+|---------------------|--------------------------------------------------|
+| website_session_id  | Unique identifier for each website session        |
+| created_at          | Date and time when the session started            |
+| utm_source          | Source of the traffic (e.g., 'gsearch', 'bsearch')|
+| utm_campaign        | Specific campaign name or type (e.g., 'nonbrand', 'brand') |
+| device_type         | Type of device used during the session (e.g., 'mobile', 'desktop') |
+| http_referer        | Referring URL that led the user to the website    |
+
+---
+
+### 6. **website_pageviews**: Records page views within each session.
+
+| Column Name         | Description                                      |
+|---------------------|--------------------------------------------------|
+| website_pageview_id | Unique identifier for each page view              |
+| website_session_id  | Identifier linking to the session during the page view |
+| pageview_url        | URL of the page that was viewed                   |
+| created_at          | Date and time when the page was viewed            |
+## Entity Relationship Diagram
+Below is a diagram showing the relationships between the tables in the SQL Workbench environment:
+
+![image](https://github.com/user-attachments/assets/7fcc3e16-32ba-4899-9a9e-61038dea1272)
+
+
+## Requirements and Insights
+1. **Monthly Trends for Gsearch Sessions and Orders**: Showcases Gsearch growth.
+2. **Gsearch Brand vs. Non-brand Campaigns**: Non-brand sessions outpaced brand.
+3. **Device Analysis**: Mobile sessions high, desktop conversion better.
+4. **Channel Trends**: Gsearch is the dominant traffic source.
+5. **Website Performance**: Gradual improvement in conversion rates.
+6. **Landing Page Test Impact**: `Lander-1` boosted conversions.
+7. **Conversion Funnel Analysis**: `Lander-1` users had better flow.
+8. **Volume Growth**: Steady increase in sessions and orders.
+9. **Cross-Selling Analysis**: Strong cross-sell between products post-launch.
+
+## Usage
+To replicate this analysis, clone the repository and follow the SQL scripts provided:
+
+git clone [Click Here](https://github.com/HarshaVardhan1505/maven-fuzzy-factory.git)
+
+
+## Conclusion
+The analysis helps understand traffic patterns, user behavior, and product performance, guiding strategic decisions for future growth.
